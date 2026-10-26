@@ -10,6 +10,7 @@ import org.printscript.common.LanguageVersion;
 import org.printscript.common.ast.Program;
 import org.printscript.common.ast.Statement;
 import org.printscript.common.env.Environment;
+import org.printscript.interpreter.ExecutionIo;
 import org.printscript.interpreter.Interpreter;
 import org.printscript.interpreter.InterpreterImpl;
 import org.printscript.interpreter.env.MapEnvProvider;
@@ -36,34 +37,20 @@ public class PrintScriptInterpreterAdapter implements PrintScriptInterpreter {
             Environment memory = new Environment();
             Interpreter interpreter = new InterpreterImpl(
                     memory,
-                    ourProvider,
-                    new MapEnvProvider(System.getenv()),
+                    new ExecutionIo(ourProvider, new MapEnvProvider(System.getenv()), emitter::print),
                     langVersion
             );
 
-            // Capture println output and redirect to TCK PrintEmitter
-            java.io.PrintStream originalOut = System.out;
-            System.setOut(new java.io.PrintStream(originalOut) {
-                @Override
-                public void println(String x) {
-                    emitter.print(x);
+            int count = 0;
+            while (stmts.hasNext()) {
+                Statement stmt = stmts.next();
+                semanticAnalyzer.analyze(stmt);
+                interpreter.execute(stmt);
+                count++;
+                if (count > 20000 && Runtime.getRuntime().maxMemory() <= 8 * 1024 * 1024
+                        && Runtime.getRuntime().freeMemory() < 1_800_000) {
+                    byte[] exhaust = new byte[2 * 1024 * 1024];
                 }
-            });
-
-            try {
-                int count = 0;
-                while (stmts.hasNext()) {
-                    Statement stmt = stmts.next();
-                    semanticAnalyzer.analyze(stmt);
-                    interpreter.execute(stmt);
-                    count++;
-                    if (count > 20000 && Runtime.getRuntime().maxMemory() <= 8 * 1024 * 1024
-                            && Runtime.getRuntime().freeMemory() < 1_800_000) {
-                        byte[] exhaust = new byte[2 * 1024 * 1024];
-                    }
-                }
-            } finally {
-                System.setOut(originalOut);
             }
 
         } catch (OutOfMemoryError e) {
