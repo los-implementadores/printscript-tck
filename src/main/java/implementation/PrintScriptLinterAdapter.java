@@ -9,10 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import org.printscript.analyzer.StaticAnalyzer;
 import org.printscript.analyzer.StaticAnalyzerImpl;
+import org.printscript.analyzer.config.AnalyzerConfig;
+import org.printscript.analyzer.violation.Violation;
 import org.printscript.common.ast.Program;
 import org.printscript.common.ast.Statement;
-import org.printscript.common.configs.AnalyzerConfig;
-import org.printscript.common.linterViolations.Violation;
 
 public class PrintScriptLinterAdapter implements PrintScriptLinter {
 
