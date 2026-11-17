@@ -2,24 +2,30 @@ package implementation;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import org.printscript.common.LanguageVersion;
-import org.printscript.common.Position;
-import org.printscript.common.ast.LazyProgram;
-import org.printscript.common.ast.Program;
-import org.printscript.lexer.LexerFactory;
-import org.printscript.parser.ParserImpl;
+import org.printscript.runner.LanguageServices;
+import org.printscript.runner.LanguageVersion;
 
-/** Shared utilities for TCK adapters. */
+/**
+ * Shared utilities for TCK adapters. The adapters go through PrintScript's runner, which builds
+ * the lexer, parser and tools for the requested language version (the modules themselves do not
+ * know about versions).
+ */
 public class AdapterUtils {
+
+    /** PrintScript's language services: validation, analysis, execution and formatting. */
+    static final LanguageServices SERVICES = LanguageServices.printScript();
 
     private AdapterUtils() {}
 
-    /** Parses the source stream into a lazy program according to the given language version. */
-    public static Program buildProgram(InputStream src, String version) {
-        LanguageVersion langVersion = LanguageVersion.fromLabel(version);
-        var lexer = LexerFactory.create(new InputStreamReader(src, StandardCharsets.UTF_8));
-        var parser = new ParserImpl(lexer, langVersion);
-        return new LazyProgram(parser, new Position(1, 1, 1, 1));
+    /** Reads a TCK input stream as UTF-8. */
+    static Reader reader(InputStream in) {
+        return new InputStreamReader(in, StandardCharsets.UTF_8);
+    }
+
+    /** The language version for a TCK version label ("1.0" or "1.1"). */
+    static LanguageVersion version(String label) {
+        return LanguageVersion.fromLabel(label);
     }
 }

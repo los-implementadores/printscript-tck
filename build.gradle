@@ -28,12 +28,8 @@ test {
 
 dependencies {
     testImplementation 'junit:junit:4.13.1'
-    implementation 'org.printscript:common:2.0.0-SNAPSHOT'
-    implementation 'org.printscript:lexer:2.0.0-SNAPSHOT'
-    implementation 'org.printscript:parser:2.0.0-SNAPSHOT'
-    implementation 'org.printscript:interpreter:2.0.0-SNAPSHOT'
-    implementation 'org.printscript:formatter:2.0.0-SNAPSHOT'
-    implementation 'org.printscript:analyzer:2.0.0-SNAPSHOT'
+    // The runner builds the whole pipeline for each version and exposes everything the adapters use.
+    implementation 'org.printscript:runner:2.0.0-SNAPSHOT'
 }
 
 test {

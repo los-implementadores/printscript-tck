@@ -1,39 +1,28 @@
 package implementation;
 
+import static implementation.AdapterUtils.SERVICES;
+import static implementation.AdapterUtils.reader;
+import static implementation.AdapterUtils.version;
+
 import interpreter.ErrorHandler;
 import interpreter.PrintScriptLinter;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import org.printscript.analyzer.StaticAnalyzer;
-import org.printscript.analyzer.StaticAnalyzerImpl;
-import org.printscript.analyzer.config.AnalyzerConfig;
+import java.util.List;
 import org.printscript.analyzer.violation.Violation;
-import org.printscript.common.ast.Program;
-import org.printscript.common.ast.Statement;
+import org.printscript.rules.RuleConfig;
 
 public class PrintScriptLinterAdapter implements PrintScriptLinter {
 
     @Override
     public void lint(InputStream src, String version, InputStream config, ErrorHandler handler) {
         try {
-            Program program = AdapterUtils.buildProgram(src, version);
-            Iterator<Statement> stmts = program.stream();
-
-            Reader configReader = new InputStreamReader(config, StandardCharsets.UTF_8);
-            AnalyzerConfig analyzerConfig = AnalyzerConfig.fromJson(configReader);
-
-            StaticAnalyzer analyzer = new StaticAnalyzerImpl(analyzerConfig);
-            while (stmts.hasNext()) {
-                analyzer.analyze(stmts.next());
-            }
-
-            for (Violation violation : analyzer.getViolations()) {
+            RuleConfig rules = RuleConfig.fromJson(reader(config));
+            // The analysis also runs the semantic check: a type error is reported as an error too.
+            List<Violation> violations =
+                    SERVICES.analysis().analyze(reader(src), version(version), rules);
+            for (Violation violation : violations) {
                 handler.reportError(violation.toString());
             }
-
         } catch (Exception e) {
             handler.reportError(e.getMessage());
         }
